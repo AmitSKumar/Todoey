@@ -7,12 +7,12 @@
 //
 
 import UIKit
-
+import CoreData
 class TodoListViewController: UITableViewController  {
     
     var itemArray = [Item]()
-    let dataFieldPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
-   
+    //let dataFieldPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     // we are going to crated own plist so commenting below
     //let defaults = UserDefaults.standard
     
@@ -27,19 +27,55 @@ class TodoListViewController: UITableViewController  {
         newItem2.title = "Buy Eggs"
         itemArray.append(newItem2)
     */
-        loadItems()
+       // loadItems()
         //if let items = defaults.array(forKey: "ToDoListArray") as? [Item]{
       //     itemArray = items
       // }
         // Do any additional setup after loading the view.
+        loadItems()
+    }
+   
+    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return itemArray.count
+    }
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell" ,for : indexPath)
+
+        let item = itemArray[indexPath.row]
+        saveItems()
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.done ? .checkmark :.none
+        return cell
+    }
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print(itemArray[indexPath.row])
+        itemArray[indexPath.row].done  = !itemArray[indexPath.row].done
+        
+        // delete item
+        //context.delete(ItemArray[indexPath.row])
+        itemArray.remove(at:indexPath.row)
+        tableView.reloadData()
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    func saveItems(){
+        //let encoder = PropertyListEncoder()
+        do {
+            //let data = try encoder.encode(itemArray)
+           // try data.write(to:dataFieldPath!)
+            try context.save()
+        } catch
+        {
+           print(error)
+        }
     }
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         let alert = UIAlertController(title: "Add new Todoey item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { action in
-            
-            let newItem = Item()
-            newItem.title = textField.text!
+        let newItem = Item(context: self.context)
+        newItem.title = textField.text!
+        newItem.done = false
             self.itemArray.append(newItem)
           //  self.defaults.set(self.itemArray, forKey: "ToDoListArray")
             self.saveItems()
@@ -53,37 +89,7 @@ class TodoListViewController: UITableViewController  {
         alert.addAction(action)
         present(alert,animated: true , completion: nil)
     }
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
-    }
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell" ,for : indexPath)
-        
-        let item = itemArray[indexPath.row]
-        saveItems()
-        cell.textLabel?.text = item.title
-        cell.accessoryType = item.done ? .checkmark :.none
-        return cell
-    }
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(itemArray[indexPath.row])
-        itemArray[indexPath.row].done  = !itemArray[indexPath.row].done
-        
-        tableView.reloadData()
-    tableView.deselectRow(at: indexPath, animated: true)
-        
-    }
-    func saveItems(){
-        let encoder = PropertyListEncoder()
-        do{
-            let data = try encoder.encode(itemArray)
-            try data.write(to:dataFieldPath!)
-        }catch {
-            print("\(error)")
-        }
-    }
-    func loadItems(){
+   /* func loadItems(){
         let data = try? Data(contentsOf: dataFieldPath!)
         let decoder = PropertyListDecoder()
         do {
@@ -91,8 +97,18 @@ class TodoListViewController: UITableViewController  {
         }catch{
             print(error)
         }
+        }
         
-        
+    */
+    
+    func loadItems(){
+        let request :NSFetchRequest<Item> = Item.fetchRequest()
+        do{
+            itemArray = try context.fetch(request)
+            
+        }catch {
+            print(error)
+        }
     }
 
 }
