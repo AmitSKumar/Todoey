@@ -75,6 +75,7 @@ class TodoListViewController: UITableViewController, UISearchBarDelegate  {
                 do {
                     try self.realm.write {
                     let newItem = Item()
+                        newItem.dateCreated = Date()
                     newItem.title = textField.text!
                     currentCategory.items.append(newItem)
                    }
@@ -98,29 +99,37 @@ class TodoListViewController: UITableViewController, UISearchBarDelegate  {
         tableView.reloadData()
     }
     
-    /*
+    
+    
+    // Uisearchbar  delegate method
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
-        // struture query
-        //  add request to predicate
-       let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-        // sort data
-        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-        request.sortDescriptors = [sortDescriptor]
-        loadItems(with: request ,predicate: predicate)
         
-      /*  do{
-       
-            itemArray = try context.fetch(request)
-            
-        }catch {
-            print(error)
-        }
-       */
-        */
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@",searchBar.text!).sorted(byKeyPath:"dateCreated" ,ascending: true)
+        tableView.reloadData()
+        /*
+         let request : NSFetchRequest<Item> = Item.fetchRequest()
+         // struture query
+         //  add request to predicate
+         let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+         // sort data
+         let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+         request.sortDescriptors = [sortDescriptor]
+         loadItems(with: request ,predicate: predicate)
+         
+         do{
+         
+         itemArray = try context.fetch(request)
+         
+         }catch {
+         print(error)
+         }
+         */
+    }
+    
+    // ui searchbar delegate mehood  when text is changing
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
-              //  loadItems()
+               loadItems()
             DispatchQueue.main.async {
                 searchBar.resignFirstResponder()
             }
