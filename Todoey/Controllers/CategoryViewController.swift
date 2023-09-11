@@ -25,8 +25,20 @@ class CategoryViewController: UITableViewController {
         cell.textLabel?.text = categories[indexPath.row].name
         return cell
     }
-   
-   
+    
+    
+   //tableview delegate methods
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItem", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVc = segue.destination as! TodoListViewController
+        // index path of selected row
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVc.selectedCategory = categories[indexPath.row]
+        }
+    }
     // Data Manipulation methods
     func saveCategories(){
         do {
