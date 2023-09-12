@@ -8,12 +8,14 @@
 import UIKit
 import CoreData
 import RealmSwift
-class CategoryViewController: UITableViewController {
+import SwipeCellKit
+class CategoryViewController: SwipeTableViewController  {
     let realm = try! Realm()
     var categories: Results<Category>?
-  
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        tableView.rowHeight = 80.0
         loadCategories()
     }
     //TableView data source methods
@@ -22,14 +24,14 @@ class CategoryViewController: UITableViewController {
         return categories?.count ?? 1
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        // deque resusable cell with identifiar freom main.storyboard
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CetegoryCell" ,for : indexPath)
+        // tap into  super class
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No category added "
         return cell
     }
     
     
-   //tableview delegate methods
+    //tableview delegate methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "goToItem", sender: self)
     }
@@ -50,15 +52,32 @@ class CategoryViewController: UITableViewController {
             }
         } catch
         {
-           print(error)
+            print(error)
         }
         tableView.reloadData()
     }
     
     func loadCategories(){
-     categories = realm.objects(Category.self)
-      tableView.reloadData()
+        categories = realm.objects(Category.self)
+        tableView.reloadData()
         
+    }
+    // delete Data
+    override func updateModel(at indexPath: IndexPath) {
+        
+        // handle action by updating model with deletion
+     if let categorieForFDeletion = self.categories?[indexPath.row]{
+            do{
+                try self.realm.write {
+                    self.realm.delete(categorieForFDeletion)
+                }
+            }catch{
+                
+            }
+            // trigger data source method
+            //tableView.reloadData()
+      }
+     
     }
     // add new categori
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {

@@ -5,7 +5,7 @@
 
 import UIKit
 import RealmSwift
-class TodoListViewController: UITableViewController, UISearchBarDelegate  {
+class TodoListViewController: SwipeTableViewController, UISearchBarDelegate  {
     
     var todoItems : Results<Item>?
     let realm = try! Realm()
@@ -22,6 +22,7 @@ class TodoListViewController: UITableViewController, UISearchBarDelegate  {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        tableView.rowHeight = 80.0
        // loadItems()
     }
    
@@ -30,8 +31,7 @@ class TodoListViewController: UITableViewController, UISearchBarDelegate  {
         return todoItems?.count ?? 1
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell" ,for : indexPath)
-
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let item = todoItems?[indexPath.row]{
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ? .checkmark :.none
@@ -98,7 +98,14 @@ class TodoListViewController: UITableViewController, UISearchBarDelegate  {
       todoItems = selectedCategory?.items.sorted(byKeyPath: "title")
         tableView.reloadData()
     }
-    
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = todoItems?[indexPath.row]{
+            do{ try realm.write{
+                realm.delete(item)
+            }}
+            catch{}
+        }
+    }
     
     
     // Uisearchbar  delegate method
